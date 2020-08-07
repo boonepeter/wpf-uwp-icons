@@ -16,4 +16,4 @@ I processed all of the [Material Design icons](https://material.io/resources/ico
 
 ## Sample library
 
-![UWP sample](/screenshots/UWP.gif)
+![UWP sample](/screenshots/uwp.gif)
