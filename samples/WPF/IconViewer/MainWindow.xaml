@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Icon Viewer" Height="450" Width="800">
     <Grid>
-        <ScrollViewer>
+        <ScrollViewer >
             <ItemsControl x:Name="Icons" VerticalAlignment="Center" HorizontalAlignment="Center">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -16,9 +16,9 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Button HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5" Padding="10" ToolTip="{Binding Key}">
+                        <Button HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5"  Padding="10" ToolTip="{Binding Key}">
                             <Button.Content>
-                                <ContentControl Template="{Binding Value}" />
+                                <ContentControl Template="{Binding Value}" Width="24" Height="24" />
                             </Button.Content>
                         </Button>
                     </DataTemplate>

@@ -14,20 +14,23 @@ namespace Svg2Xaml
 {
     public class Converter
     {
-        public static string ConvertSVG(string filename, int size = 24)
+        public static string ConvertSVG(string filename, string keyName, int size = 24)
         {
             var doc = Svg.SvgDocument.Open(filename);
 
-            Viewbox vb = new Viewbox()
-            {
-                Height = 24,
-                Width = 24
-            };
+
+            Viewbox vb = new Viewbox();
+
             Canvas canvas = new Canvas()
             {
                 Height = doc.Height,
                 Width = doc.Width,
             };
+            if (doc.ViewBox != null)
+            {
+                canvas.Height = doc.ViewBox.Height;
+                canvas.Width = doc.ViewBox.Width;
+            }
 
             List<FrameworkElement> elements = new List<FrameworkElement>();
             GetAllElements(doc, ref elements);
@@ -39,10 +42,10 @@ namespace Svg2Xaml
 
             var xaml = XamlWriter.Save(vb);
 
-            string key = System.IO.Path.GetFileNameWithoutExtension(filename);
-            key = key.Replace('-', '_');
+            string peter = xaml;
 
-            string template = $"<ControlTemplate x:Key=\"{key}\" >" + xaml + "</ControlTemplate>";
+            xaml = "<Viewbox Width=\"{TemplateBinding Width}\" Height=\"{TemplateBinding Height}\" " + xaml.Substring(xaml.IndexOf(">"));
+            string template = $"<ControlTemplate x:Key=\"{keyName}\" >" + xaml + "</ControlTemplate>";
             return template;
         }
 
@@ -108,8 +111,13 @@ namespace Svg2Xaml
             {
                 return GetCircle((SvgCircle)svg);
             }
+            else if (svg.GetType() == typeof(SvgPolygon))
+            {
+                return GetPolygon((SvgPolygon)svg);
+            }
             else
             {
+                string peter = "lol";
                 //throw new NotImplementedException("");
                 return null;
             }
@@ -126,6 +134,34 @@ namespace Svg2Xaml
             Canvas.SetLeft(rectangle, rect.Location.X);
             Canvas.SetTop(rectangle, rect.Location.Y);
             return rectangle;
+        }
+
+        public static Polygon GetPolygon(SvgPolygon poly)
+        {
+            Polygon polygon = new Polygon()
+            {
+                Points = GetPoints(poly.Points),
+                Fill = GetBrush(poly)
+            };
+            return polygon;
+        }
+
+        private static PointCollection GetPoints(SvgPointCollection collection)
+        {
+            PointCollection points = new PointCollection();
+            for (int i = 0; i < collection.Count - 1; i += 2)
+            {
+                Point point = new Point()
+                {
+                    X = collection[i],
+                    Y = collection[i + 1]
+                };
+                points.Add(point);
+            }
+            string lol = collection.ToString();
+            return points;
+
+
         }
 
         public static SolidColorBrush GetBrush(SvgVisualElement svg)
@@ -149,12 +185,20 @@ namespace Svg2Xaml
 
         public static string BuildResourceDictionary(string[] filenames)
         {
+            HashSet<string> keys = new HashSet<string>();
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < filenames.Length; i++)
             {
-                builder.Append(ConvertSVG(filenames[i]) + "\n");
+                string key = System.IO.Path.GetFileNameWithoutExtension(filenames[i]);
+                key = key.Replace('-', '_');
+                while (keys.Contains(key))
+                {
+                    key = key + "_1";
+                }
+                keys.Add(key);
+                builder.Append(ConvertSVG(filenames[i], key) + "\n");
             }
-            return "<ResourceDictionary xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\""+
+            return "<ResourceDictionary xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"" +
                 " xmlns:x=\"http://schemas.microsoft.com/winfx/2006/xaml\">\n" + builder.ToString() + "</ResourceDictionary>";
         }
         public class LocatedShape : FrameworkElement
